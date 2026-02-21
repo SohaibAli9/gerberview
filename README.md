@@ -40,7 +40,16 @@ GerberView is a static web application that lets you inspect Gerber (RS-274X) an
 | T-04 | CI pipeline (GitHub Actions)                    | Done   |
 | T-05 | Test fixture files (Gerber, Excellon, ZIPs)     | Done   |
 
-Phase 1 (Core Types & Infrastructure) is next. See `docs/` for planning and design documents.
+**Phase 1 — Core Types & Infrastructure: Complete**
+
+| Task | Description                                     | Status |
+| ---- | ----------------------------------------------- | ------ |
+| T-06 | Rust core types, error types, GeometryBuilder   | Done   |
+| T-07 | TypeScript types, constants, signals, app store | Done   |
+| T-08 | Layer identification module                     | Done   |
+| T-09 | ZIP handler module                              | Done   |
+
+Phase 2 (Parsing Pipeline) is next. See `docs/` for planning and design documents.
 
 ## License
 
