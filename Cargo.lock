@@ -215,10 +215,12 @@ version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
  "earclip",
+ "gerber-types",
  "gerber_parser",
  "js-sys",
  "serde",
  "serde-wasm-bindgen",
+ "thiserror",
  "wasm-bindgen",
  "wasm-bindgen-test",
  "web-sys",
