@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GerberView</title>
+  </head>
+  <body class="bg-board-bg text-gray-200 font-mono m-0 h-screen flex flex-col overflow-hidden">
+    <header class="flex items-center justify-between px-4 py-2 border-b border-board-border shrink-0">
+      <h1 class="text-lg font-bold tracking-tight">⚡ GerberView</h1>
+      <div class="flex gap-2">
+        <a
+          href="https://github.com/SohaibAli9/gerberview"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-sm text-gray-400 hover:text-white transition-colors"
+        >
+          GitHub
+        </a>
+      </div>
+    </header>
+
+    <div class="flex flex-1 min-h-0">
+      <aside
+        id="layer-panel"
+        class="w-56 border-r border-board-border bg-board-panel p-3 overflow-y-auto hidden"
+        aria-label="Layer controls"
+      >
+        <p class="text-xs text-gray-500 uppercase tracking-wider mb-2">Layers</p>
+      </aside>
+
+      <main class="flex-1 relative">
+        <canvas id="canvas" class="absolute inset-0 w-full h-full"></canvas>
+
+        <div
+          id="upload-zone"
+          class="absolute inset-0 flex items-center justify-center"
+          role="button"
+          tabindex="0"
+          aria-label="Drop Gerber ZIP file or click to open"
+        >
+          <div class="border-2 border-dashed border-board-border rounded-lg px-12 py-10 text-center cursor-pointer hover:border-gray-500 transition-colors">
+            <p class="text-gray-400 text-lg">Drop Gerber .zip</p>
+            <p class="text-gray-500 text-sm mt-1">or click to open</p>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <footer
+      id="status-bar"
+      class="flex items-center justify-between px-4 py-1.5 border-t border-board-border text-xs text-gray-500 shrink-0"
+    >
+      <span id="status-text">Ready</span>
+      <span id="version">v0.1.0</span>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

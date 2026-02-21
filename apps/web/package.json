@@ -1,0 +1,23 @@
+{
+  "name": "@gerberview/web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["@swc/core", "esbuild"]
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4",
+    "tailwindcss": "^4",
+    "typescript": "^5.4",
+    "vite": "^6",
+    "vite-plugin-top-level-await": "^1",
+    "vite-plugin-wasm-pack": "^0.1"
+  }
+}
