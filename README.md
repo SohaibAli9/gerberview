@@ -29,7 +29,18 @@ GerberView is a static web application that lets you inspect Gerber (RS-274X) an
 
 ## Status
 
-This project is in the early stages of development. See `docs/` for planning and design documents.
+**Phase 0 — Project Foundation: Complete**
+
+| Task | Description                                     | Status |
+| ---- | ----------------------------------------------- | ------ |
+| T-00 | Git repository, README, LICENSE, .gitignore     | Done   |
+| T-01 | Rust crate scaffold + WASM build verification   | Done   |
+| T-02 | Web app scaffold (Vite + TypeScript + Tailwind) | Done   |
+| T-03 | Monorepo tooling + code quality gates           | Done   |
+| T-04 | CI pipeline (GitHub Actions)                    | Done   |
+| T-05 | Test fixture files (Gerber, Excellon, ZIPs)     | Done   |
+
+Phase 1 (Core Types & Infrastructure) is next. See `docs/` for planning and design documents.
 
 ## License
 
