@@ -1,0 +1,132 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    name: Rust
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Install cargo-deny
+        run: cargo install cargo-deny --locked
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+      - name: Lint
+        run: cargo clippy -- -D warnings
+
+      - name: Run tests
+        run: cargo test
+
+      - name: Build WASM
+        run: wasm-pack build crates/gerberview-wasm --target web --release
+
+      - name: Audit dependencies
+        run: cargo deny check
+
+  typescript:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build WASM
+        run: pnpm run wasm:build
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Type check
+        run: pnpm run typecheck
+
+      - name: Format check
+        run: pnpm run format:check
+
+      - name: Run tests
+        run: pnpm run test
+
+      - name: Build
+        run: pnpm run build
+
+  # e2e:
+  #   name: E2E
+  #   needs: [rust, typescript]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #
+  #     - uses: dtolnay/rust-toolchain@stable
+  #       with:
+  #         targets: wasm32-unknown-unknown
+  #
+  #     - uses: Swatinem/rust-cache@v2
+  #
+  #     - name: Install wasm-pack
+  #       run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+  #
+  #     - uses: pnpm/action-setup@v4
+  #
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 20
+  #         cache: pnpm
+  #
+  #     - name: Install dependencies
+  #       run: pnpm install --frozen-lockfile
+  #
+  #     - name: Build WASM + web
+  #       run: pnpm run wasm:build && pnpm run build
+  #
+  #     - name: Install Playwright browsers
+  #       run: pnpm exec playwright install --with-deps
+  #
+  #     - name: Run E2E tests
+  #       run: pnpm run test:e2e
+  #
+  #     - name: Upload test results
+  #       if: always()
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: playwright-report
+  #         path: apps/web/playwright-report/
+  #         retention-days: 30

@@ -2,6 +2,7 @@
 
 **A fast, free, browser-native Gerber PCB viewer. No signup, no upload, no backend.**
 
+[![CI](https://github.com/SohaibAli9/gerberview/actions/workflows/ci.yml/badge.svg)](https://github.com/SohaibAli9/gerberview/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Rust](https://img.shields.io/badge/Rust-000000?logo=rust&logoColor=white)
 ![WebAssembly](https://img.shields.io/badge/WebAssembly-654FF0?logo=webassembly&logoColor=white)

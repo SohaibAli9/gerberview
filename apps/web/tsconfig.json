@@ -19,7 +19,10 @@
     "sourceMap": true,
     "skipLibCheck": true,
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    "paths": {
+      "gerberview-wasm": ["../../crates/gerberview-wasm/pkg"]
+    }
   },
   "include": ["src/**/*.ts", "vite-env.d.ts"],
   "exclude": ["node_modules", "dist", "e2e"]
