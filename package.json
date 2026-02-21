@@ -1,0 +1,36 @@
+{
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.30.1",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "format:check": "turbo run format:check",
+    "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
+    "test:e2e": "turbo run test:e2e",
+    "wasm:build": "wasm-pack build crates/gerberview-wasm --target web",
+    "wasm:build:release": "wasm-pack build crates/gerberview-wasm --target web --release",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,js}": ["eslint --fix", "prettier --write"],
+    "*.{json,md,yaml,yml}": ["prettier --write"],
+    "*.rs": ["rustfmt --edition 2021"]
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["@swc/core", "esbuild"]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19",
+    "@commitlint/config-conventional": "^19",
+    "@gerberview/eslint-config": "workspace:*",
+    "eslint": "^9",
+    "husky": "^9",
+    "lint-staged": "^16",
+    "prettier": "^3",
+    "turbo": "^2"
+  }
+}

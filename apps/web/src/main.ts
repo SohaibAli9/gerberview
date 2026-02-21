@@ -3,8 +3,12 @@ import init, { ping } from "gerberview-wasm";
 
 async function main(): Promise<void> {
   await init();
+
   const result = ping();
-  console.log("WASM ping:", result);
+  const statusEl = document.getElementById("status-text");
+  if (statusEl) {
+    statusEl.textContent = `WASM ready (ping: ${String(result)})`;
+  }
 }
 
 void main();
