@@ -183,9 +183,15 @@ mod tests {
     #[test]
     fn parse_gerber_valid_fixture() {
         let data = include_bytes!("../tests/fixtures/minimal/rectangle.gbr");
-        let meta = parse_gerber_internal(data).unwrap_or_else(|e| {
-            std::panic::panic_any(format!("expected Ok, got Err: {e}"));
-        });
+        let result = parse_gerber_internal(data);
+        assert!(
+            result.is_ok(),
+            "expected Ok, got Err: {:?}",
+            result.as_ref().err()
+        );
+        let Some(meta) = result.ok() else {
+            return;
+        };
         assert!(
             meta.command_count > 0,
             "expected commands from valid Gerber"
@@ -204,18 +210,23 @@ mod tests {
         let garbage: &[u8] = &[0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0x01, 0x02, 0x03];
         let result = parse_gerber_internal(garbage);
         // gerber_parser may return a partial doc with zero commands
-        match result {
-            Ok(meta) => assert_eq!(meta.vertex_count, 0),
-            Err(_) => {} // also acceptable
+        if let Ok(meta) = result {
+            assert_eq!(meta.vertex_count, 0);
         }
     }
 
     #[test]
     fn parse_gerber_malformed_fixture() {
         let data = include_bytes!("../tests/fixtures/minimal/malformed.gbr");
-        let meta = parse_gerber_internal(data).unwrap_or_else(|e| {
-            std::panic::panic_any(format!("expected Ok for partial parse, got Err: {e}"));
-        });
+        let result = parse_gerber_internal(data);
+        assert!(
+            result.is_ok(),
+            "expected Ok for partial parse, got Err: {:?}",
+            result.as_ref().err()
+        );
+        let Some(meta) = result.ok() else {
+            return;
+        };
         assert!(
             meta.command_count > 0,
             "partial parse should yield commands"
@@ -226,9 +237,15 @@ mod tests {
     #[test]
     fn parse_excellon_fixture() {
         let data = include_bytes!("../tests/fixtures/minimal/drill.drl");
-        let meta = parse_excellon_internal(data).unwrap_or_else(|e| {
-            std::panic::panic_any(format!("expected Ok, got Err: {e}"));
-        });
+        let result = parse_excellon_internal(data);
+        assert!(
+            result.is_ok(),
+            "expected Ok, got Err: {:?}",
+            result.as_ref().err()
+        );
+        let Some(meta) = result.ok() else {
+            return;
+        };
         assert!(meta.vertex_count > 0, "expected generated drill geometry");
         assert_eq!(meta.command_count, 5, "expected five drill commands");
     }

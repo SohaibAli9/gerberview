@@ -284,6 +284,7 @@ mod tests {
 
     const EPSILON: f64 = 1e-6;
 
+    #[allow(clippy::needless_pass_by_value)]
     fn flash_and_build(aperture: Aperture, position: Point) -> crate::geometry::LayerGeometry {
         let mut builder = GeometryBuilder::new();
         let result = flash_aperture(&mut builder, &aperture, position);
@@ -305,7 +306,7 @@ mod tests {
             if let [x, y] = pair {
                 let dx = f64::from(*x) - 5.0;
                 let dy = f64::from(*y) - 3.0;
-                let distance = (dx * dx + dy * dy).sqrt();
+                let distance = dx.hypot(dy);
                 assert!((distance - 1.0).abs() < EPSILON);
             }
         }
