@@ -13,6 +13,10 @@
 
 //! `GerberView` WASM module — Gerber/Excellon parsing and geometry conversion.
 
+pub mod error;
+pub mod excellon;
+pub mod geometry;
+
 use wasm_bindgen::prelude::*;
 
 /// Smoke-test export. Returns 42.
