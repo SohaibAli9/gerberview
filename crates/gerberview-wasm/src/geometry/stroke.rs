@@ -229,6 +229,7 @@ mod tests {
 
     const EPSILON: f64 = 1e-6;
 
+    #[allow(clippy::needless_pass_by_value)]
     fn draw_and_build(
         from: Point,
         to: Point,
