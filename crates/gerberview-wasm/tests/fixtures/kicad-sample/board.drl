@@ -1,0 +1,30 @@
+M48
+;
+; #@! TF.GenerationSoftware,KiCad,7.0
+; #@! TF.CreationDate,2025-02-21
+; #@! TF.ProjectId,gerbelview-sample
+;
+; #@! TF.FileFunction,Plated,PTH
+;
+; #@! TF.FilePolarity,Positive
+;
+METRIC,TZ
+T1C0.8
+T2C1.0
+T3C1.2
+%
+T1
+X5Y5
+X10Y5
+X15Y5
+X15Y10
+X5Y10
+T2
+X25Y15
+X20Y20
+T3
+X35Y5
+X40Y15
+X10Y25
+T0
+M30

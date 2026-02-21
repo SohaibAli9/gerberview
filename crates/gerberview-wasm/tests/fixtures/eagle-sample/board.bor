@@ -1,0 +1,15 @@
+G04 Layer: Board Outline - Eagle-generated*
+%FSLAX23Y23*%
+%MOIN*%
+%ADD10C,0.002*%
+G01*
+%
+G04 Board outline rectangle ~40mm x 25mm (1.57" x 0.98")*
+D10*
+X0000Y0000D02*
+X1575Y0000D01*
+X1575Y0984D01*
+X0000Y0984D01*
+X0000Y0000D01*
+%
+M02*

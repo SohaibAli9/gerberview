@@ -1,0 +1,8 @@
+G04 Minimal rectangle aperture flash*
+%FSLAX36Y36*%
+%MOMM*%
+%ADD10R,2.000000X1.000000*%
+D10*
+X0Y0D03*
+X5000000Y3000000D03*
+M02*
