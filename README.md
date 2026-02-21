@@ -49,7 +49,15 @@ GerberView is a static web application that lets you inspect Gerber (RS-274X) an
 | T-08 | Layer identification module                     | Done   |
 | T-09 | ZIP handler module                              | Done   |
 
-Phase 2 (Parsing Pipeline) is next. See `docs/` for planning and design documents.
+**Phase 2 — Parsing Pipeline: Complete**
+
+| Task | Description                                    | Status |
+| ---- | ---------------------------------------------- | ------ |
+| T-10 | WASM bridge (`lib.rs`) + `parse_gerber` export | Done   |
+| T-11 | Excellon drill parser                          | Done   |
+| T-12 | Web Worker + `WorkerClient`                    | Done   |
+
+Phase 3 (Geometry Engine) is next. See `docs/` for planning and design documents.
 
 ## License
 
