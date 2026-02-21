@@ -22,7 +22,7 @@ use std::io::{BufReader, Cursor};
 
 use wasm_bindgen::prelude::*;
 
-use crate::geometry::{BoundingBox, LayerGeometry, LayerMeta};
+use crate::geometry::{BoundingBox, GeometryBuilder, LayerGeometry, LayerMeta};
 
 thread_local! {
     static LAST_GEOMETRY: RefCell<Option<LayerGeometry>> = const { RefCell::new(None) };
@@ -100,15 +100,49 @@ fn parse_gerber_internal(data: &[u8]) -> Result<LayerMeta, String> {
     Ok(meta)
 }
 
-/// Parse an Excellon drill file from raw bytes.
+/// Parse an Excellon drill file from raw bytes and generate renderable geometry.
+///
+/// Returns `LayerMeta` as a `JsValue` via `serde-wasm-bindgen`.
+/// Geometry buffers are stored internally; retrieve with
+/// [`get_positions`] and [`get_indices`].
 ///
 /// # Errors
 ///
-/// Currently returns an error — full implementation in a future task.
+/// Returns a descriptive error string if parsing fails.
 #[wasm_bindgen]
 pub fn parse_excellon(data: &[u8]) -> Result<JsValue, JsValue> {
-    let _ = data;
-    Err(JsValue::from_str("Excellon parsing not yet implemented"))
+    let meta = parse_excellon_internal(data).map_err(|e| JsValue::from_str(&e))?;
+    serde_wasm_bindgen::to_value(&meta).map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+/// Internal parse logic shared between the wasm export and native tests.
+fn parse_excellon_internal(data: &[u8]) -> Result<LayerMeta, String> {
+    let result = excellon::parser::parse(data).map_err(|err| err.to_string())?;
+
+    let mut builder = GeometryBuilder::new();
+    for warning in &result.warnings {
+        builder.warn(warning.clone());
+    }
+
+    for hole in &result.holes {
+        builder.push_ngon(hole.x, hole.y, hole.diameter / 2.0, 32);
+    }
+
+    let mut geom = builder.build();
+    geom.command_count = u32::try_from(result.holes.len()).unwrap_or(u32::MAX);
+
+    let meta = LayerMeta {
+        bounds: geom.bounds,
+        vertex_count: geom.vertex_count,
+        index_count: u32::try_from(geom.indices.len()).unwrap_or(u32::MAX),
+        command_count: geom.command_count,
+        warning_count: u32::try_from(geom.warnings.len()).unwrap_or(u32::MAX),
+        warnings: geom.warnings.clone(),
+    };
+
+    store_geometry(geom);
+
+    Ok(meta)
 }
 
 /// Retrieve the position buffer for the last parsed layer.
@@ -187,6 +221,16 @@ mod tests {
             "partial parse should yield commands"
         );
         assert_eq!(meta.vertex_count, 0, "geometry is stubbed to empty");
+    }
+
+    #[test]
+    fn parse_excellon_fixture() {
+        let data = include_bytes!("../tests/fixtures/minimal/drill.drl");
+        let meta = parse_excellon_internal(data).unwrap_or_else(|e| {
+            std::panic::panic_any(format!("expected Ok, got Err: {e}"));
+        });
+        assert!(meta.vertex_count > 0, "expected generated drill geometry");
+        assert_eq!(meta.command_count, 5, "expected five drill commands");
     }
 
     #[test]

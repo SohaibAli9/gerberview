@@ -38,4 +38,6 @@ pub struct ExcellonResult {
     pub tools: Vec<ToolDefinition>,
     /// Unit system specified in the file.
     pub units: ExcellonUnits,
+    /// Parser warnings encountered while processing the file.
+    pub warnings: Vec<String>,
 }
