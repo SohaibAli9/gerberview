@@ -7,6 +7,7 @@ use serde::Serialize;
 /// Real-world Gerber/Excellon files cannot produce counts exceeding
 /// `u32::MAX`; this clamp is a defensive guard, not an expected path.
 #[inline]
+#[allow(clippy::cast_possible_truncation)]
 pub(crate) fn saturate_u32(n: usize) -> u32 {
     n.min(u32::MAX as usize) as u32
 }

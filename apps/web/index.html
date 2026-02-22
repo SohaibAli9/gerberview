@@ -8,7 +8,12 @@
   <body class="bg-board-bg text-gray-200 font-mono m-0 h-screen flex flex-col overflow-hidden">
     <header class="flex items-center justify-between px-4 py-2 border-b border-board-border shrink-0">
       <h1 class="text-lg font-bold tracking-tight">⚡ GerberView</h1>
-      <div class="flex gap-2">
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-1" id="view-controls" role="toolbar" aria-label="View controls">
+          <button id="btn-fit" type="button" class="px-2 py-1 text-xs text-gray-400 hover:text-white border border-board-border rounded hover:border-gray-500 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500" aria-label="Fit board to view">Fit</button>
+          <button id="btn-zoom-in" type="button" class="px-2 py-1 text-xs text-gray-400 hover:text-white border border-board-border rounded hover:border-gray-500 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500" aria-label="Zoom in">Zoom+</button>
+          <button id="btn-zoom-out" type="button" class="px-2 py-1 text-xs text-gray-400 hover:text-white border border-board-border rounded hover:border-gray-500 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500" aria-label="Zoom out">Zoom−</button>
+        </div>
         <a
           href="https://github.com/SohaibAli9/gerberview"
           target="_blank"
@@ -30,20 +35,36 @@
       </aside>
 
       <main class="flex-1 relative">
-        <canvas id="canvas" class="absolute inset-0 w-full h-full"></canvas>
+        <canvas id="canvas" class="absolute inset-0 w-full h-full" aria-label="PCB Gerber layer visualization"></canvas>
+
+        <div
+          id="loading-overlay"
+          class="hidden absolute inset-0 z-20 flex flex-col items-center justify-center bg-board-bg/80"
+          aria-live="polite"
+        >
+          <div class="w-8 h-8 border-2 border-gray-600 border-t-blue-400 rounded-full animate-spin"></div>
+          <p id="loading-text" class="mt-3 text-sm text-gray-400">Loading...</p>
+        </div>
 
         <div
           id="upload-zone"
-          class="absolute inset-0 flex items-center justify-center"
+          class="js-upload-zone group absolute inset-0 flex items-center justify-center focus:outline-none"
           role="button"
           tabindex="0"
           aria-label="Drop Gerber ZIP file or click to open"
         >
-          <div class="border-2 border-dashed border-board-border rounded-lg px-12 py-10 text-center cursor-pointer hover:border-gray-500 transition-colors">
+          <div class="border-2 border-dashed border-board-border rounded-lg px-12 py-10 text-center cursor-pointer hover:border-gray-500 transition-colors group-focus-visible:ring-2 group-focus-visible:ring-blue-500">
             <p class="text-gray-400 text-lg">Drop Gerber .zip</p>
             <p class="text-gray-500 text-sm mt-1">or click to open</p>
           </div>
         </div>
+
+        <div
+          id="error-banner"
+          class="hidden absolute top-0 inset-x-0 z-10"
+          role="alert"
+          aria-live="assertive"
+        ></div>
       </main>
     </div>
 
