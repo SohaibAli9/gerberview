@@ -22,6 +22,36 @@ const BC_GBR_025_WARN: &str = "BC-GBR-025: expression nesting >10 levels";
 const MAX_NEST_WARN: u32 = 10;
 const MAX_NEST_ERROR: u32 = 20;
 
+/// Resolves aperture macro parameters from `MacroDecimal` to `f64`.
+///
+/// Parameters are resolved in order; each resolved value populates the
+/// variable context ($1, $2, ...) for resolving subsequent parameters
+/// that may reference them.
+///
+/// # Errors
+///
+/// Returns an error when a parameter cannot be resolved (e.g. undefined
+/// variable reference).
+pub fn resolve_macro_params(
+    builder: &mut GeometryBuilder,
+    params: Option<&[MacroDecimal]>,
+) -> Result<Vec<f64>, GeometryError> {
+    let Some(params) = params else {
+        return Ok(Vec::new());
+    };
+    let mut vars: HashMap<u32, f64> = HashMap::new();
+    let mut resolved = Vec::with_capacity(params.len());
+    for (i, p) in params.iter().enumerate() {
+        let v = resolve_decimal(builder, p, &vars)?;
+        let key = u32::try_from(i).map_or(0, |n| n + 1);
+        if key > 0 {
+            vars.insert(key, v);
+        }
+        resolved.push(v);
+    }
+    Ok(resolved)
+}
+
 /// Evaluates an aperture macro at the given position.
 ///
 /// Builds variable context from `params` ($1 = params[0], etc.), processes
@@ -192,11 +222,7 @@ fn tokenize(expr: &str) -> Result<Vec<Token>, GeometryError> {
                 let mut num = String::from(c);
                 while let Some(&p) = chars.peek() {
                     match p {
-                        '0'..='9' | '.' => {
-                            chars.next();
-                            num.push(p);
-                        }
-                        'e' | 'E' => {
+                        '0'..='9' | '.' | 'e' | 'E' => {
                             chars.next();
                             num.push(p);
                         }

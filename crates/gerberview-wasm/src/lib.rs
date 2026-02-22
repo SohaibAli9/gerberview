@@ -22,7 +22,7 @@ use std::io::{BufReader, Cursor};
 
 use wasm_bindgen::prelude::*;
 
-use crate::geometry::{BoundingBox, GeometryBuilder, LayerGeometry, LayerMeta};
+use crate::geometry::{GeometryBuilder, LayerGeometry, LayerMeta};
 
 thread_local! {
     static LAST_GEOMETRY: RefCell<Option<LayerGeometry>> = const { RefCell::new(None) };
@@ -75,17 +75,7 @@ fn parse_gerber_internal(data: &[u8]) -> Result<LayerMeta, String> {
         Err((doc, _parse_err)) => doc,
     };
 
-    let command_count = u32::try_from(doc.commands.len()).unwrap_or(u32::MAX);
-
-    let geom = LayerGeometry {
-        positions: Vec::new(),
-        indices: Vec::new(),
-        bounds: BoundingBox::new(),
-        command_count,
-        vertex_count: 0,
-        warnings: Vec::new(),
-        clear_ranges: Vec::new(),
-    };
+    let geom = geometry::convert(&doc).map_err(|e| e.to_string())?;
 
     let meta = LayerMeta {
         bounds: geom.bounds,
@@ -197,7 +187,10 @@ mod tests {
             meta.command_count > 0,
             "expected commands from valid Gerber"
         );
-        assert_eq!(meta.vertex_count, 0, "geometry is stubbed to empty");
+        assert!(
+            meta.vertex_count > 0,
+            "expected non-empty geometry from valid Gerber"
+        );
     }
 
     #[test]
@@ -232,7 +225,6 @@ mod tests {
             meta.command_count > 0,
             "partial parse should yield commands"
         );
-        assert_eq!(meta.vertex_count, 0, "geometry is stubbed to empty");
     }
 
     #[test]
@@ -260,6 +252,105 @@ mod tests {
         let indices = get_indices();
         assert!(positions.is_empty(), "no parse yet => empty positions");
         assert!(indices.is_empty(), "no parse yet => empty indices");
+    }
+
+    /// IT-001: Parse `KiCad` Gerber → non-empty command list.
+    #[test]
+    #[allow(clippy::expect_used)]
+    fn it_001_kicad_parse_non_empty_commands() {
+        let data = include_bytes!("../tests/fixtures/kicad-sample/board-F_Cu.gbr");
+        let result = parse_gerber_internal(data);
+        assert!(
+            result.is_ok(),
+            "expected Ok, got Err: {:?}",
+            result.as_ref().err()
+        );
+        let meta = result.as_ref().expect("assert!(result.is_ok()) above");
+        assert!(
+            meta.command_count > 0,
+            "KiCad copper layer should have non-empty command list"
+        );
+    }
+
+    /// IT-002: Parse `KiCad` copper layer → geometry with `vertex_count` > 0.
+    #[test]
+    #[allow(clippy::expect_used)]
+    fn it_002_kicad_parse_produces_geometry() {
+        let data = include_bytes!("../tests/fixtures/kicad-sample/board-F_Cu.gbr");
+        let result = parse_gerber_internal(data);
+        assert!(
+            result.is_ok(),
+            "expected Ok, got Err: {:?}",
+            result.as_ref().err()
+        );
+        let meta = result.as_ref().expect("assert!(result.is_ok()) above");
+        assert!(
+            meta.vertex_count > 0,
+            "KiCad copper layer should produce non-empty geometry"
+        );
+    }
+
+    /// IT-003: Parse `KiCad` copper layer → bounds within expected range.
+    #[test]
+    #[allow(clippy::expect_used)]
+    fn it_003_kicad_parse_bounds_reasonable() {
+        let data = include_bytes!("../tests/fixtures/kicad-sample/board-F_Cu.gbr");
+        let result = parse_gerber_internal(data);
+        assert!(
+            result.is_ok(),
+            "expected Ok, got Err: {:?}",
+            result.as_ref().err()
+        );
+        let meta = result.as_ref().expect("assert!(result.is_ok()) above");
+        let b = &meta.bounds;
+        assert!(
+            b.max_x >= b.min_x && b.max_y >= b.min_y,
+            "bounds should be valid"
+        );
+        assert!(
+            (b.max_x - b.min_x).abs() < 1e6 && (b.max_y - b.min_y).abs() < 1e6,
+            "bounds should be within reasonable PCB size (mm)"
+        );
+    }
+
+    /// IT-007: Parse malformed file → partial result + error, no panic.
+    #[test]
+    #[allow(clippy::expect_used)]
+    fn it_007_malformed_partial_result_no_panic() {
+        let data = include_bytes!("../tests/fixtures/minimal/malformed.gbr");
+        let result = parse_gerber_internal(data);
+        assert!(
+            result.is_ok(),
+            "malformed file should yield partial Ok result, got Err: {:?}",
+            result.as_ref().err()
+        );
+        let meta = result.as_ref().expect("assert!(result.is_ok()) above");
+        assert!(
+            meta.command_count > 0,
+            "partial parse should yield commands from valid prefix"
+        );
+    }
+
+    /// Convert unit: Direct `geometry::convert` with minimal fixture → non-empty geometry.
+    #[test]
+    #[allow(clippy::expect_used)]
+    fn convert_rectangle_produces_geometry() {
+        use std::io::{BufReader, Cursor};
+
+        let data = include_bytes!("../tests/fixtures/minimal/rectangle.gbr");
+        let reader = BufReader::new(Cursor::new(data.as_slice()));
+        let doc = match gerber_parser::parse(reader) {
+            Ok(d) | Err((d, _)) => d,
+        };
+        let geom = geometry::convert(&doc).expect("convert should succeed");
+        assert!(
+            geom.vertex_count > 0,
+            "rectangle fixture should produce non-empty geometry"
+        );
+        assert!(
+            geom.positions.len() == geom.vertex_count as usize * 2,
+            "positions length should match vertex_count * 2"
+        );
     }
 }
 
