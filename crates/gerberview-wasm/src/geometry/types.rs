@@ -125,6 +125,8 @@ pub struct LayerGeometry {
     pub vertex_count: u32,
     /// Warning messages generated during conversion.
     pub warnings: Vec<String>,
+    /// Index ranges for clear-polarity geometry `(start, end)` pairs.
+    pub clear_ranges: Vec<(u32, u32)>,
 }
 
 /// Metadata returned to JavaScript for a parsed layer.
@@ -154,6 +156,8 @@ pub struct GeometryBuilder {
     indices: Vec<u32>,
     bounds: BoundingBox,
     warnings: Vec<String>,
+    /// Index ranges for clear-polarity geometry, populated by macro evaluator.
+    clear_ranges: Vec<(u32, u32)>,
 }
 
 impl GeometryBuilder {
@@ -164,6 +168,7 @@ impl GeometryBuilder {
             indices: Vec::new(),
             bounds: BoundingBox::new(),
             warnings: Vec::new(),
+            clear_ranges: Vec::new(),
         }
     }
 
@@ -218,9 +223,32 @@ impl GeometryBuilder {
         self.warnings.push(msg);
     }
 
+    /// Records an index range for clear-polarity geometry.
+    ///
+    /// Used by aperture macro evaluator when a primitive has exposure off.
+    pub fn record_clear_range(&mut self, start: u32, end: u32) {
+        if end > start {
+            self.clear_ranges.push((start, end));
+        }
+    }
+
+    /// Returns the current number of triangle indices.
+    #[must_use]
+    pub fn index_count(&self) -> u32 {
+        u32::try_from(self.indices.len()).unwrap_or(u32::MAX)
+    }
+
+    /// Returns the current number of vertices.
+    #[must_use]
+    pub fn vertex_count(&self) -> u32 {
+        u32::try_from(self.positions.len() / 2).unwrap_or(u32::MAX)
+    }
+
     /// Consumes the builder and produces a [`LayerGeometry`].
     ///
     /// `command_count` is set to 0; the caller should update it as needed.
+    /// `clear_ranges` is initialized empty; the caller may populate it from a
+    /// [`super::polarity::PolarityTracker`].
     pub fn build(self) -> LayerGeometry {
         let vertex_count = u32::try_from(self.positions.len() / 2).unwrap_or(u32::MAX);
         LayerGeometry {
@@ -230,6 +258,7 @@ impl GeometryBuilder {
             command_count: 0,
             vertex_count,
             warnings: self.warnings,
+            clear_ranges: self.clear_ranges,
         }
     }
 }

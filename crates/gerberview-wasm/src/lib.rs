@@ -84,6 +84,7 @@ fn parse_gerber_internal(data: &[u8]) -> Result<LayerMeta, String> {
         command_count,
         vertex_count: 0,
         warnings: Vec::new(),
+        clear_ranges: Vec::new(),
     };
 
     let meta = LayerMeta {
