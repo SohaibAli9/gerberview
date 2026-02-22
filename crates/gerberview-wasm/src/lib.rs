@@ -164,6 +164,25 @@ pub fn get_indices() -> Vec<u32> {
     })
 }
 
+/// Retrieve the clear-polarity index ranges for the last parsed layer.
+///
+/// Returns a flattened `[start0, end0, start1, end1, ...]` array of index
+/// ranges that should be rendered with background color (clear polarity).
+/// Returns an empty array if no layer has been parsed or there are no clear ranges.
+#[wasm_bindgen]
+pub fn get_clear_ranges() -> Vec<u32> {
+    LAST_GEOMETRY.with(|g| {
+        g.borrow().as_ref().map_or_else(Vec::new, |geom| {
+            let mut flat = Vec::with_capacity(geom.clear_ranges.len() * 2);
+            for &(start, end) in &geom.clear_ranges {
+                flat.push(start);
+                flat.push(end);
+            }
+            flat
+        })
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -252,8 +271,31 @@ mod tests {
         });
         let positions = get_positions();
         let indices = get_indices();
+        let clear_ranges = get_clear_ranges();
         assert!(positions.is_empty(), "no parse yet => empty positions");
         assert!(indices.is_empty(), "no parse yet => empty indices");
+        assert!(
+            clear_ranges.is_empty(),
+            "no parse yet => empty clear ranges"
+        );
+    }
+
+    #[test]
+    fn get_clear_ranges_returns_flattened_pairs() {
+        let mut geom = LayerGeometry {
+            positions: vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0],
+            indices: vec![0, 1, 2],
+            bounds: geometry::BoundingBox::new(),
+            command_count: 1,
+            vertex_count: 3,
+            warnings: Vec::new(),
+            clear_ranges: vec![(0, 3), (6, 12)],
+        };
+        geom.bounds.update(0.0, 0.0);
+        geom.bounds.update(1.0, 1.0);
+        store_geometry(geom);
+        let ranges = get_clear_ranges();
+        assert_eq!(ranges, vec![0, 3, 6, 12]);
     }
 }
 

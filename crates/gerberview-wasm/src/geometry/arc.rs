@@ -17,6 +17,10 @@ const MIN_SEGMENT_LENGTH_FLOOR: f64 = 0.01;
 const RADIUS_MISMATCH_TOLERANCE: f64 = 1e-4;
 const POINT_EQUALITY_EPSILON: f64 = 1e-9;
 
+/// Default max segment length for arc tessellation in region boundaries,
+/// where no stroke width is available to derive segment density.
+pub const DEFAULT_REGION_ARC_SEGMENT_LENGTH: f64 = 0.1;
+
 /// Arc sweep direction for G02/G03 interpolation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ArcDirection {
@@ -57,6 +61,7 @@ pub fn draw_arc(
         return Ok(());
     };
 
+    let max_seg = max_segment_length_from_stroke(stroke_width);
     let Some(points) = arc_centerline_points(
         builder,
         from,
@@ -64,7 +69,7 @@ pub fn draw_arc(
         center_offset,
         direction,
         quadrant_mode,
-        stroke_width,
+        max_seg,
     ) else {
         return Ok(());
     };
@@ -72,14 +77,22 @@ pub fn draw_arc(
     emit_stroked_polyline(builder, &points, aperture)
 }
 
-fn arc_centerline_points(
+/// Tessellate an arc into a series of centerline points.
+///
+/// `max_segment_length` controls tessellation density — shorter segments
+/// produce smoother arcs. For stroked arcs, derive this from the stroke width
+/// via `max_segment_length_from_stroke`. For region boundaries, use
+/// [`DEFAULT_REGION_ARC_SEGMENT_LENGTH`].
+///
+/// Returns `None` if the arc is degenerate or uses unsupported single-quadrant mode.
+pub(crate) fn arc_centerline_points(
     builder: &mut GeometryBuilder,
     from: Point,
     to: Point,
     center_offset: Point,
     direction: ArcDirection,
     quadrant_mode: ArcQuadrantMode,
-    stroke_width: f64,
+    max_segment_length: f64,
 ) -> Option<Vec<Point>> {
     if matches!(quadrant_mode, ArcQuadrantMode::SingleQuadrant) {
         builder.warn("single-quadrant arc mode (G74) is not supported; skipping arc".to_string());
@@ -123,7 +136,6 @@ fn arc_centerline_points(
     };
 
     let arc_length = sweep.abs() * radius;
-    let max_segment_length = max_segment_length_from_stroke(stroke_width);
     let segments = segment_count_for_arc(arc_length, max_segment_length);
     let points = tessellate_centerline(center, radius, start_angle, sweep, segments);
     Some(points)
@@ -357,7 +369,7 @@ mod tests {
             Point { x: 0.0, y: -5.0 },
             ArcDirection::Clockwise,
             ArcQuadrantMode::MultiQuadrant,
-            1.0,
+            0.25,
         )
         .unwrap_or_default();
 
@@ -388,7 +400,7 @@ mod tests {
             Point { x: -5.0, y: 0.0 },
             ArcDirection::CounterClockwise,
             ArcQuadrantMode::MultiQuadrant,
-            1.0,
+            0.25,
         )
         .unwrap_or_default();
 
@@ -416,7 +428,7 @@ mod tests {
             Point { x: -5.0, y: 0.0 },
             ArcDirection::CounterClockwise,
             ArcQuadrantMode::MultiQuadrant,
-            1.0,
+            0.25,
         )
         .unwrap_or_default();
 
@@ -452,7 +464,7 @@ mod tests {
             Point { x: -radius, y: 0.0 },
             ArcDirection::CounterClockwise,
             ArcQuadrantMode::MultiQuadrant,
-            1.0,
+            0.25,
         )
         .unwrap_or_default();
 
