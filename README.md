@@ -79,7 +79,15 @@ GerberView is a static web application that lets you inspect Gerber (RS-274X) an
 | T-23 | Interaction dispatcher (zoom, pan, keyboard)     | Done   |
 | T-24 | Touch gestures (pinch-to-zoom, drag-to-pan)      | Done   |
 
-Phase 5 (UI) is next. See `docs/` for planning and design documents.
+**Phase 5 — UI: Complete**
+
+| Task | Description                                              | Status |
+| ---- | -------------------------------------------------------- | ------ |
+| T-25 | Upload zone UI (drag-drop, file picker, visual feedback) | Done   |
+| T-26 | Layer panel, status bar, error banner                    | Done   |
+| T-27 | Composition root, loading overlay, zoom/fit controls     | Done   |
+
+Phase 6 (Testing & Polish) is next. See `docs/` for planning and design documents.
 
 ## License
 
