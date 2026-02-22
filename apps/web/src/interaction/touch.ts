@@ -5,10 +5,16 @@ import type { SceneManager } from "../scene/scene";
 import { AppState } from "../types";
 import type { BoundingBox, Point, ViewState } from "../types";
 import { screenToBoard } from "./coords";
-import { updateView } from "./interaction";
 import { applyPan } from "./pan";
 
 type TouchMode = "idle" | "pending_pan" | "panning" | "pinching";
+
+type ViewUpdateFn = (
+  newState: ViewState,
+  store: AppStore,
+  renderer: Renderer,
+  sceneManager: SceneManager,
+) => void;
 
 interface TouchState {
   mode: TouchMode;
@@ -102,6 +108,7 @@ function handlePinchMove(
   store: AppStore,
   renderer: Renderer,
   sceneManager: SceneManager,
+  onViewUpdate: ViewUpdateFn,
 ): void {
   e.preventDefault();
 
@@ -129,7 +136,7 @@ function handlePinchMove(
     canvas.height,
   );
 
-  updateView(newState, store, renderer, sceneManager);
+  onViewUpdate(newState, store, renderer, sceneManager);
   state.lastDistance = newDistance;
 }
 
@@ -140,6 +147,7 @@ function handlePanMove(
   store: AppStore,
   renderer: Renderer,
   sceneManager: SceneManager,
+  onViewUpdate: ViewUpdateFn,
 ): void {
   const elapsed = Date.now() - state.startTime;
   if (elapsed < PAN_HOLD_DELAY_MS) return;
@@ -174,7 +182,7 @@ function handlePanMove(
     sceneManager.getBounds(),
   );
 
-  updateView(newState, store, renderer, sceneManager);
+  onViewUpdate(newState, store, renderer, sceneManager);
 }
 
 function handleTouchMove(
@@ -184,18 +192,19 @@ function handleTouchMove(
   store: AppStore,
   renderer: Renderer,
   sceneManager: SceneManager,
+  onViewUpdate: ViewUpdateFn,
 ): void {
   if (store.appState.value !== AppState.Rendered) return;
 
   const touchCount = e.touches.length;
 
   if (state.mode === "pinching" && touchCount >= 2) {
-    handlePinchMove(e, state, canvas, store, renderer, sceneManager);
+    handlePinchMove(e, state, canvas, store, renderer, sceneManager, onViewUpdate);
     return;
   }
 
   if (touchCount === 1 && (state.mode === "pending_pan" || state.mode === "panning")) {
-    handlePanMove(e, state, canvas, store, renderer, sceneManager);
+    handlePanMove(e, state, canvas, store, renderer, sceneManager, onViewUpdate);
   }
 }
 
@@ -218,6 +227,7 @@ export function setupTouch(
   store: AppStore,
   renderer: Renderer,
   sceneManager: SceneManager,
+  onViewUpdate: ViewUpdateFn,
 ): void {
   const state: TouchState = {
     mode: "idle",
@@ -238,7 +248,7 @@ export function setupTouch(
   canvas.addEventListener(
     "touchmove",
     (e: TouchEvent): void => {
-      handleTouchMove(e, state, canvas, store, renderer, sceneManager);
+      handleTouchMove(e, state, canvas, store, renderer, sceneManager, onViewUpdate);
     },
     { passive: false },
   );

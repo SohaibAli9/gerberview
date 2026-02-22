@@ -2,6 +2,15 @@
 
 use serde::Serialize;
 
+/// Saturating conversion from `usize` to `u32`.
+///
+/// Real-world Gerber/Excellon files cannot produce counts exceeding
+/// `u32::MAX`; this clamp is a defensive guard, not an expected path.
+#[inline]
+pub(crate) fn saturate_u32(n: usize) -> u32 {
+    n.min(u32::MAX as usize) as u32
+}
+
 /// 2D point in board coordinate space.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Point {
@@ -232,13 +241,13 @@ impl GeometryBuilder {
     /// Returns the current number of triangle indices.
     #[must_use]
     pub fn index_count(&self) -> u32 {
-        u32::try_from(self.indices.len()).unwrap_or(u32::MAX)
+        saturate_u32(self.indices.len())
     }
 
     /// Returns the current number of vertices.
     #[must_use]
     pub fn vertex_count(&self) -> u32 {
-        u32::try_from(self.positions.len() / 2).unwrap_or(u32::MAX)
+        saturate_u32(self.positions.len() / 2)
     }
 
     /// Consumes the builder and produces a [`LayerGeometry`].
@@ -247,7 +256,7 @@ impl GeometryBuilder {
     /// `clear_ranges` is initialized empty; the caller may populate it from a
     /// [`super::polarity::PolarityTracker`].
     pub fn build(self) -> LayerGeometry {
-        let vertex_count = u32::try_from(self.positions.len() / 2).unwrap_or(u32::MAX);
+        let vertex_count = saturate_u32(self.positions.len() / 2);
         LayerGeometry {
             positions: self.positions,
             indices: self.indices,

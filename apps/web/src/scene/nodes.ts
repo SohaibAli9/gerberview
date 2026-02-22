@@ -1,11 +1,4 @@
-import type {
-  BoundingBox,
-  LayerColor,
-  LayerMeta,
-  LayerRenderState,
-  LayerType,
-  ViewMatrix,
-} from "../types";
+import type { LayerColor, LayerMeta, LayerRenderState, LayerType } from "../types";
 
 /** Base for all scene nodes. */
 export interface SceneNode {
@@ -22,29 +15,4 @@ export interface LayerNode extends SceneNode {
   readonly meta: LayerMeta;
   readonly zOrder: number;
   opacity: number;
-}
-
-/** The root of all board-space layers. */
-export interface BoardNode extends SceneNode {
-  readonly kind: "board";
-  readonly layers: readonly LayerNode[];
-  readonly bounds: BoundingBox;
-}
-
-/** Container for non-board overlays (cursor crosshair, future measurements). */
-export interface OverlayGroup extends SceneNode {
-  readonly kind: "overlay-group";
-  readonly children: readonly OverlayNode[];
-}
-
-/** A single overlay element (crosshair, ruler, grid). */
-export interface OverlayNode extends SceneNode {
-  readonly kind: "crosshair" | "measurement" | "grid";
-  readonly renderFn: (gl: WebGLRenderingContext, viewMatrix: ViewMatrix) => void;
-}
-
-/** The complete scene. */
-export interface SceneRoot {
-  readonly board: BoardNode | null;
-  readonly overlays: OverlayGroup;
 }
