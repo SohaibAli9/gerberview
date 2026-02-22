@@ -20,8 +20,7 @@ function handleResize(canvas: HTMLCanvasElement, renderer: Renderer): void {
   renderer.markDirty();
 }
 
-/** Sync a new ViewState to the store, renderer, and scene bounds. */
-export function updateView(
+function updateView(
   newState: ViewState,
   store: AppStore,
   renderer: Renderer,
@@ -172,5 +171,5 @@ export function setupInteraction(
     handleResize(canvas, renderer);
   });
 
-  setupTouch(canvas, store, renderer, sceneManager);
+  setupTouch(canvas, store, renderer, sceneManager, updateView);
 }

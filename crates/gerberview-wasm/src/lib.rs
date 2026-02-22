@@ -22,6 +22,7 @@ use std::io::{BufReader, Cursor};
 
 use wasm_bindgen::prelude::*;
 
+use crate::geometry::types::saturate_u32;
 use crate::geometry::{GeometryBuilder, LayerGeometry, LayerMeta};
 
 thread_local! {
@@ -81,9 +82,9 @@ pub fn parse_gerber_internal(data: &[u8]) -> Result<LayerMeta, String> {
     let meta = LayerMeta {
         bounds: geom.bounds,
         vertex_count: geom.vertex_count,
-        index_count: u32::try_from(geom.indices.len()).unwrap_or(u32::MAX),
+        index_count: saturate_u32(geom.indices.len()),
         command_count: geom.command_count,
-        warning_count: u32::try_from(geom.warnings.len()).unwrap_or(u32::MAX),
+        warning_count: saturate_u32(geom.warnings.len()),
         warnings: geom.warnings.clone(),
     };
 
@@ -122,14 +123,14 @@ pub fn parse_excellon_internal(data: &[u8]) -> Result<LayerMeta, String> {
     }
 
     let mut geom = builder.build();
-    geom.command_count = u32::try_from(result.holes.len()).unwrap_or(u32::MAX);
+    geom.command_count = saturate_u32(result.holes.len());
 
     let meta = LayerMeta {
         bounds: geom.bounds,
         vertex_count: geom.vertex_count,
-        index_count: u32::try_from(geom.indices.len()).unwrap_or(u32::MAX),
+        index_count: saturate_u32(geom.indices.len()),
         command_count: geom.command_count,
-        warning_count: u32::try_from(geom.warnings.len()).unwrap_or(u32::MAX),
+        warning_count: saturate_u32(geom.warnings.len()),
         warnings: geom.warnings.clone(),
     };
 
