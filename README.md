@@ -57,7 +57,19 @@ GerberView is a static web application that lets you inspect Gerber (RS-274X) an
 | T-11 | Excellon drill parser                          | Done   |
 | T-12 | Web Worker + `WorkerClient`                    | Done   |
 
-Phase 3 (Geometry Engine) is next. See `docs/` for planning and design documents.
+**Phase 3 — Geometry Engine: Complete**
+
+| Task | Description                                         | Status |
+| ---- | --------------------------------------------------- | ------ |
+| T-13 | Aperture expansion (circle, rect, obround, polygon) | Done   |
+| T-14 | Stroke widening (D01 linear draw)                   | Done   |
+| T-15 | Arc tessellation (G02/G03)                          | Done   |
+| T-16 | Region fill (G36/G37)                               | Done   |
+| T-17 | Polarity, step-repeat, aperture macros              | Done   |
+| T-18 | Geometry converter orchestrator                     | Done   |
+| T-19 | Rust integration tests + benchmarks                 | Done   |
+
+Phase 4 (WebGL Rendering) is next. See `docs/` for planning and design documents.
 
 ## License
 
