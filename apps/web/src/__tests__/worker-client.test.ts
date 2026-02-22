@@ -172,6 +172,7 @@ function layerResult(requestId: string): WorkerToMainMessage {
     },
     positions: new Float32Array([0, 0, 10, 0, 10, 20, 0, 20]),
     indices: new Uint32Array([0, 1, 2, 0, 2, 3]),
+    clearRanges: new Uint32Array([]),
   };
 }
 

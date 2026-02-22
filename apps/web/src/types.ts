@@ -173,6 +173,7 @@ export interface LayerResultMessage {
   readonly meta: LayerMeta;
   readonly positions: Float32Array;
   readonly indices: Uint32Array;
+  readonly clearRanges: Uint32Array;
 }
 
 export interface LayerErrorMessage {

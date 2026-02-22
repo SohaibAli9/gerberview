@@ -57,7 +57,6 @@ pub fn convert(doc: &GerberDoc) -> Result<LayerGeometry, GeometryError> {
         current_point: types::Point { x: 0.0, y: 0.0 },
         current_aperture: None,
         interpolation_mode: types::InterpolationMode::Linear,
-        polarity: types::Polarity::Dark,
         region_mode: false,
         region_points: Vec::new(),
         units,
@@ -237,7 +236,36 @@ pub fn convert(doc: &GerberDoc) -> Result<LayerGeometry, GeometryError> {
                 let target = coords_to_point(c, &state);
 
                 if state.region_mode {
-                    state.region_points.push(target);
+                    match state.interpolation_mode {
+                        types::InterpolationMode::Linear => {
+                            state.region_points.push(target);
+                        }
+                        types::InterpolationMode::ClockwiseArc
+                        | types::InterpolationMode::CounterClockwiseArc => {
+                            let center_offset = offset_to_point(offset.as_ref(), &state);
+                            let direction = match state.interpolation_mode {
+                                types::InterpolationMode::CounterClockwiseArc => {
+                                    arc::ArcDirection::CounterClockwise
+                                }
+                                _ => arc::ArcDirection::Clockwise,
+                            };
+                            if let Some(points) = arc::arc_centerline_points(
+                                builder_ref,
+                                state.current_point,
+                                target,
+                                center_offset,
+                                direction,
+                                arc_quadrant_mode,
+                                arc::DEFAULT_REGION_ARC_SEGMENT_LENGTH,
+                            ) {
+                                for pt in points.into_iter().skip(1) {
+                                    state.region_points.push(pt);
+                                }
+                            } else {
+                                state.region_points.push(target);
+                            }
+                        }
+                    }
                 } else if let Some(aperture) =
                     state.current_aperture.and_then(|d| doc.apertures.get(&d))
                 {

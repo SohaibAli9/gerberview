@@ -69,7 +69,17 @@ GerberView is a static web application that lets you inspect Gerber (RS-274X) an
 | T-18 | Geometry converter orchestrator                     | Done   |
 | T-19 | Rust integration tests + benchmarks                 | Done   |
 
-Phase 4 (WebGL Rendering) is next. See `docs/` for planning and design documents.
+**Phase 4 — WebGL Rendering: Complete**
+
+| Task | Description                                      | Status |
+| ---- | ------------------------------------------------ | ------ |
+| T-20 | Shader compilation + WebGL context setup         | Done   |
+| T-21 | Renderer module (draw loop, view matrix, layers) | Done   |
+| T-22 | Scene graph manager (layer nodes, GPU buffers)   | Done   |
+| T-23 | Interaction dispatcher (zoom, pan, keyboard)     | Done   |
+| T-24 | Touch gestures (pinch-to-zoom, drag-to-pan)      | Done   |
+
+Phase 5 (UI) is next. See `docs/` for planning and design documents.
 
 ## License
 

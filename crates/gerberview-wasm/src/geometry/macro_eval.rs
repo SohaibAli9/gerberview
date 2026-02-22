@@ -472,32 +472,27 @@ fn eval_outline(
     let exposure = resolve_boolean(builder, &o.exposure, vars)?;
     let angle = resolve_decimal(builder, &o.angle, vars)?;
 
-    if o.points.len() < 2 {
+    if o.points.len() < 3 {
         return Ok(());
     }
 
-    let idx_start = builder.index_count();
-    let mut first: Option<u32> = None;
-    let mut prev: Option<u32> = None;
-
+    let mut flat = Vec::with_capacity(o.points.len() * 2);
     for pt in &o.points {
         let x = resolve_decimal(builder, &pt.0, vars)?;
         let y = resolve_decimal(builder, &pt.1, vars)?;
         let (rx, ry) = rotate_point(x, y, angle);
-        let wx = position.x + rx;
-        let wy = position.y + ry;
-        let idx = builder.push_vertex(wx, wy);
-        if first.is_none() {
-            first = Some(idx);
-        }
-        if let Some(p) = prev {
-            if let Some(f) = first {
-                builder.push_triangle(f, p, idx);
-            }
-        }
-        prev = Some(idx);
+        flat.push(position.x + rx);
+        flat.push(position.y + ry);
     }
 
+    let tri_indices = earclip::earcut::earcut(&flat, &[], 2);
+    if tri_indices.is_empty() {
+        return Ok(());
+    }
+
+    let idx_start = builder.index_count();
+    let base = outline_emit_vertices(builder, &flat);
+    outline_emit_triangles(builder, &tri_indices, base)?;
     let idx_end = builder.index_count();
 
     if !exposure {
@@ -505,6 +500,42 @@ fn eval_outline(
     }
 
     Ok(())
+}
+
+fn outline_emit_vertices(builder: &mut GeometryBuilder, flat: &[f64]) -> u32 {
+    let mut first: Option<u32> = None;
+    for pair in flat.chunks_exact(2) {
+        if let [x, y] = *pair {
+            let idx = builder.push_vertex(x, y);
+            if first.is_none() {
+                first = Some(idx);
+            }
+        }
+    }
+    first.unwrap_or(0)
+}
+
+fn outline_emit_triangles(
+    builder: &mut GeometryBuilder,
+    indices: &[usize],
+    base: u32,
+) -> Result<(), GeometryError> {
+    for tri in indices.chunks_exact(3) {
+        if let [ia, ib, ic] = *tri {
+            let a = outline_offset(base, ia)?;
+            let b = outline_offset(base, ib)?;
+            let c = outline_offset(base, ic)?;
+            builder.push_triangle(a, b, c);
+        }
+    }
+    Ok(())
+}
+
+fn outline_offset(base: u32, offset: usize) -> Result<u32, GeometryError> {
+    let offset_u32 = u32::try_from(offset)
+        .map_err(|_| GeometryError::MacroError("outline index overflow".into()))?;
+    base.checked_add(offset_u32)
+        .ok_or_else(|| GeometryError::MacroError("outline vertex index overflow".into()))
 }
 
 fn eval_polygon(
@@ -653,6 +684,32 @@ mod tests {
         let geom = builder.build();
         assert!(geom.vertex_count >= 3);
         assert!(geom.indices.len() >= 3);
+    }
+
+    #[test]
+    fn ut_mac_003b_concave_outline_triangulates_correctly() {
+        let points = vec![
+            (MacroDecimal::Value(0.0), MacroDecimal::Value(0.0)),
+            (MacroDecimal::Value(2.0), MacroDecimal::Value(0.0)),
+            (MacroDecimal::Value(2.0), MacroDecimal::Value(2.0)),
+            (MacroDecimal::Value(1.0), MacroDecimal::Value(1.0)),
+            (MacroDecimal::Value(0.0), MacroDecimal::Value(2.0)),
+            (MacroDecimal::Value(0.0), MacroDecimal::Value(0.0)),
+        ];
+        let macro_def = ApertureMacro::new("CONCAVE").add_content(OutlinePrimitive {
+            exposure: MacroBoolean::Value(true),
+            points,
+            angle: MacroDecimal::Value(0.0),
+        });
+        let mut builder = GeometryBuilder::new();
+        let result = evaluate_macro(&mut builder, &macro_def, &[], Point { x: 0.0, y: 0.0 });
+        assert!(result.is_ok());
+        let geom = builder.build();
+        assert!(geom.vertex_count >= 5);
+        assert!(
+            geom.indices.len() >= 9,
+            "concave pentagon needs at least 3 triangles"
+        );
     }
 
     #[test]

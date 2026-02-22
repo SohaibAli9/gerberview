@@ -80,8 +80,6 @@ pub struct GerberState {
     pub current_aperture: Option<i32>,
     /// Active interpolation mode.
     pub interpolation_mode: InterpolationMode,
-    /// Active polarity.
-    pub polarity: Polarity,
     /// Whether region mode is active (G36/G37).
     pub region_mode: bool,
     /// Accumulated region boundary points.
@@ -98,7 +96,6 @@ impl Default for GerberState {
             current_point: Point { x: 0.0, y: 0.0 },
             current_aperture: None,
             interpolation_mode: InterpolationMode::Linear,
-            polarity: Polarity::Dark,
             region_mode: false,
             region_points: Vec::new(),
             units: None,

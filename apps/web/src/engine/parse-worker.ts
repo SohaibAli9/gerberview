@@ -1,4 +1,5 @@
 import initWasm, {
+  get_clear_ranges,
   get_indices,
   get_positions,
   parse_excellon,
@@ -140,6 +141,7 @@ function parseFile(file: FilePayload): {
   meta: LayerMeta;
   positions: Float32Array;
   indices: Uint32Array;
+  clearRanges: Uint32Array;
 } {
   const bytes = new Uint8Array(file.content);
   const rawMeta: unknown =
@@ -152,13 +154,19 @@ function parseFile(file: FilePayload): {
     meta,
     positions: get_positions(),
     indices: get_indices(),
+    clearRanges: get_clear_ranges(),
   };
 }
 
 function postLayerResult(
   requestId: string,
   file: FilePayload,
-  parsed: { meta: LayerMeta; positions: Float32Array; indices: Uint32Array },
+  parsed: {
+    meta: LayerMeta;
+    positions: Float32Array;
+    indices: Uint32Array;
+    clearRanges: Uint32Array;
+  },
 ): void {
   const transferables: Transferable[] = [];
   if (parsed.positions.buffer instanceof ArrayBuffer) {
@@ -166,6 +174,9 @@ function postLayerResult(
   }
   if (parsed.indices.buffer instanceof ArrayBuffer) {
     transferables.push(parsed.indices.buffer);
+  }
+  if (parsed.clearRanges.buffer instanceof ArrayBuffer) {
+    transferables.push(parsed.clearRanges.buffer);
   }
 
   workerScope.postMessage(
@@ -177,6 +188,7 @@ function postLayerResult(
       meta: parsed.meta,
       positions: parsed.positions,
       indices: parsed.indices,
+      clearRanges: parsed.clearRanges,
     },
     transferables,
   );

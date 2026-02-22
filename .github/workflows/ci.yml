@@ -45,6 +45,16 @@ jobs:
       - name: Build WASM
         run: wasm-pack build crates/gerberview-wasm --target web --release
 
+      - name: Check WASM binary size
+        run: |
+          gzip -k -f crates/gerberview-wasm/pkg/gerberview_wasm_bg.wasm
+          size=$(wc -c < crates/gerberview-wasm/pkg/gerberview_wasm_bg.wasm.gz | tr -d ' ')
+          echo "WASM gzipped size: ${size} bytes"
+          if [ "$size" -gt 819200 ]; then
+            echo "::error::WASM binary exceeds 800KB gzipped limit (${size} bytes)"
+            exit 1
+          fi
+
       - name: Audit dependencies
         run: cargo deny check
 
